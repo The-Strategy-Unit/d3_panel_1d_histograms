@@ -1,0 +1,22 @@
+{
+  "name": "d3_panel_1d_histograms",
+  "version": "1.0.0",
+  "description": "Proof of concept (POC) using D3 to create small multiple line charts.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/The-Strategy-Unit/d3_panel_1d_histograms"
+  },
+  "keywords": ["d3", "charts", "data-viz"],
+  "author": "Paul Seamer",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "3.1.0"
+  }
+}
