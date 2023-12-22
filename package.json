@@ -1,7 +1,7 @@
 {
   "name": "d3_panel_1d_histograms",
   "version": "1.0.0",
-  "description": "Proof of concept (POC) using D3 to create small multiple line charts.",
+  "description": "Proof of concept using D3 to create small multiple line charts.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
