@@ -11,9 +11,9 @@ const width = 500 - margin.left - margin.right
 const height = 200 - margin.top - margin.bottom
 
 /* set file path */
-// const blobDir =
-//   'https://strategyunit.blob.core.windows.net/population-aging-app/'
-const blobDir = './data/'  
+const blobDir =
+  'https://strategyunit.blob.core.windows.net/population-aging-app/'
+// const blobDir = './data/'
 const filePrefix = 'test_results_'
 const fileExt = '.json'
 
