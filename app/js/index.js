@@ -11,24 +11,17 @@ import { switchPod } from './main.js'
 import { switchArea } from './main.js'
 import { toggleHsa } from './main.js'
 
-const selectedArea = 'E08000026'
-const selectedProjVar = '1'
-const selectedHorizon = '2025'
-const selectedPod = 'aae'
+let selectedArea = 'E08000026'
 
-const data = await d3.csv(blobDir + filePrefix + selectedArea + fileExt)
+let data = await d3.json(blobDir + filePrefix + selectedArea + fileExt)
 
-const grpDat = d3.group(
-  data,
-  (d) => d.proj_id,
-  (d) => d.end_year,
-  (d) => d.pod
+let projDat = data.filter(
+  item => (
+    item.proj_id == '1' &&
+    item.end_year == '2025' &&
+    item.pod == 'aae'
+  )
 )
-
-const projDat = grpDat
-  .get(selectedProjVar)
-  .get(selectedHorizon)
-  .get(selectedPod)
 
 plotHsaGrps(projDat)
 
@@ -57,7 +50,7 @@ d3.select('#selectHorizon').on('change', function () {
   let selectedHorizon = d3.select(this).property('value')
   let selectedProjVar = d3.select('#selectProjVar').property('value')
   let selectedPod = d3.select('#selectPod').property('value')
-  updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod)
+  updatePlots(data, selectedProjVar, selectedHorizon, selectedPod)
 })
 
 /* when the projection variant dropdown changes, run updatePlots() with the new value */
@@ -65,7 +58,7 @@ d3.select('#selectProjVar').on('change', function () {
   let selectedProjVar = d3.select(this).property('value')
   let selectedHorizon = d3.select('#selectHorizon').property('value')
   let selectedPod = d3.select('#selectPod').property('value')
-  updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod)
+  updatePlots(data, selectedProjVar, selectedHorizon, selectedPod)
 })
 
 /* when the health status toggle changes show/hide circles */

@@ -11,11 +11,11 @@ const width = 500 - margin.left - margin.right
 const height = 200 - margin.top - margin.bottom
 
 /* set file path */
-const blobDir =
-  'https://strategyunit.blob.core.windows.net/population-aging-app/'
-// const blobDir = './data/'  
+// const blobDir =
+//   'https://strategyunit.blob.core.windows.net/population-aging-app/'
+const blobDir = './data/'  
 const filePrefix = 'test_results_'
-const fileExt = '.csv'
+const fileExt = '.json'
 
 /* set transition duration for updatePlots fn */
 const transDur = 1800
@@ -84,17 +84,14 @@ function plotHsaGrps(projDat) {
   /* iterate over data array and create plot elements (x-axis, bars, and circles) */
   hsaGrps.forEach(function (d) {
     /* set xScale domain based on range of end_p values in each hsagrp */
-    let maxEndp = d3.max(d.value.map((d) => Number(d.end_p)))
+    let maxEndp = d3.max(d.value.map((d) => d.data.map((d) => d.x1))[0])
     xScale.domain([0, maxEndp]).nice(5)
 
     /* define x-axis for each hsagrp */
     let xAxis = d3.axisBottom().scale(xScale)
 
-    /* attempt to find optimal number of bins for each hsagrp */
-    let binDat = d3
-      .bin()
-      .thresholds(30)
-      .value((d) => Number(d.end_p))(d.value)
+    /* bins data for each hsagrp */
+    let binDat = d.value.map((d) => d.data)[0]
 
     /* obtain coordinates for plotting circles */
     let cx = d.value.map((d) => Number(d.end_p_nohsa))[0]
@@ -126,7 +123,7 @@ function plotHsaGrps(projDat) {
     bars
       .append('rect')
       .attr('transform', function (d) {
-        return 'translate(' + xScale(d.x1) + ',' + margin.top + ')'
+        return 'translate(' + xScale(d.x0) + ',' + margin.top + ')'
       })
       .attr('x', 0)
       .attr('width', function (d) {
@@ -134,7 +131,7 @@ function plotHsaGrps(projDat) {
       })
       .attr('height', height / 1.66)
       .style('fill', function (d) {
-        return colorPal(d.length)
+        return colorPal(d.freq)
       })
 
     /* draw circles */
@@ -180,13 +177,14 @@ function plotHsaGrps(projDat) {
 }
 
 /* fn: update the plots when the data (area), projection variant or model horizon changes */
-function updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod) {
+function updatePlots(data, selectedProjVar, selectedHorizon, selectedPod) {
   /* get the new data */
-  let projDat = grpDat
-    .get(selectedProjVar)
-    .get(selectedHorizon)
-    .get(selectedPod)
-
+  let projDat = data.filter(
+    item => (
+      item.proj_id == selectedProjVar &&
+      item.end_year == selectedHorizon &&
+      item.pod == selectedPod
+    ))
   /* data to plot */
   let hsaGrps = Array.from(
     d3.group(projDat, (d) => d.hsagrp),
@@ -196,17 +194,14 @@ function updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod) {
   /* iterate over data array and create plot elements (x-axis, bars, and circles) */
   hsaGrps.forEach(function (d) {
     /* set xScale domain based on range of end_p values in each hsagrp */
-    let maxEndp = d3.max(d.value.map((d) => Number(d.end_p)))
+    let maxEndp = d3.max(d.value.map((d) => d.data.map((d) => d.x1))[0])
     xScale.domain([0, maxEndp]).nice(5)
 
     /* define x-axis for each hsagrp */
     let xAxis = d3.axisBottom().scale(xScale)
 
-    /* attempt to find optimal number of bins for each hsagrp */
-    let binDat = d3
-      .bin()
-      .thresholds(30)
-      .value((d) => Number(d.end_p))(d.value)
+    /* bins data for each hsagrp */
+    let binDat = d.value.map((d) => d.data)[0]
 
     /* select the correct svg for each hsagrp */
     let svg = d3.select('svg.' + d.value[0].hsagrp)
@@ -219,7 +214,7 @@ function updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod) {
       .transition()
       .duration(transDur)
       .attr('transform', function (d) {
-        return 'translate(' + xScale(d.x1) + ',' + margin.top + ')'
+        return 'translate(' + xScale(d.x0) + ',' + margin.top + ')'
       })
       .attr('x', 0)
       .attr('width', function (d) {
@@ -227,7 +222,7 @@ function updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod) {
       })
       .attr('height', height / 1.66)
       .style('fill', function (d) {
-        return colorPal(d.length)
+        return colorPal(d.freq)
       })
 
     svg.selectAll('#end-p-bar').exit().remove()
@@ -263,18 +258,13 @@ function updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod) {
 
 /* fn: switch the plots when pod changes */
 function switchPod(data, selectedProjVar, selectedHorizon, selectedPod) {
-  /* group the data */
-  let grpDat = d3.group(
-    data,
-    (d) => d.proj_id,
-    (d) => d.end_year,
-    (d) => d.pod
-  )
   /* get the new data */
-  let projDat = grpDat
-    .get(selectedProjVar)
-    .get(selectedHorizon)
-    .get(selectedPod)
+  let projDat = data.filter(
+    item => (
+      item.proj_id == selectedProjVar &&
+      item.end_year == selectedHorizon &&
+      item.pod == selectedPod
+    ))
   /* remove plots */
   d3.select('#panels').selectAll('svg').remove()
   /* reset hsa toggle */
@@ -291,17 +281,10 @@ function switchArea(
   selectedHorizon,
   selectedPod
 ) {
-  /* get name of csv file from area dropdown */
+  /* get name of json file from area dropdown */
   let url = blobDir + filePrefix + selectedArea + fileExt
-  d3.csv(url).then(function (data) {
-    /* group the new data */
-    let grpDat = d3.group(
-      data,
-      (d) => d.proj_id,
-      (d) => d.end_year,
-      (d) => d.pod
-    )
-    updatePlots(grpDat, selectedProjVar, selectedHorizon, selectedPod)
+  d3.json(url).then(function (data) {
+    updatePlots(data, selectedProjVar, selectedHorizon, selectedPod)
   })
 }
 
