@@ -2,8 +2,9 @@
 import { plotTitleSpacer, margin, width, height, transDur, blobDir, filePrefix, fileExt } from './main.js'
 /* import d3 functions */
 import { d3 } from './main.js'
-import { xScale, colorPal, tooltip } from './main.js'
+import { xScale, tooltip } from './main.js'
 /* import udf functions */
+import { colorPal } from './main.js'
 import { mouseOver, mouseOut } from './main.js'
 import { plotHsaGrps } from './main.js'
 import { updatePlots } from './main.js'

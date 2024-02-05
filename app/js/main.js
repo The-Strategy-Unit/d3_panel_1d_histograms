@@ -23,12 +23,6 @@ const transDur = 1800
 /* define axes - a 1D histogram only requires an x-axis */
 const xScale = d3.scaleLinear().range([margin.left, width])
 
-/* define a color palette (histogram bins) */
-/* color scale maps to counts of values in bins; domain([min, median, max]) */
-const colorPal = d3
-  .scaleDiverging((d) => d3.interpolateViridis(1 - d))
-  .domain([0, 40, 80])
-
 /* define a tooltip */
 const tooltip = d3
   .select('body')
@@ -36,6 +30,16 @@ const tooltip = d3
   .attr('class', 'tooltip')
   .attr('id', 'tooltip-hsa')
   .style('opacity', 0)
+
+/* define a color palette for histogram bins */
+/* color scale maps to counts of values in bins; domain([min, median, max]) */
+function colorPal(d) {
+  const minFreq = d3.min(d.value.map((d) => d.data.map((d) => d.freq))[0])
+  const medFreq = d3.quantile(d.value.map((d) => d.data.map((d) => d.freq))[0], .5)
+  const maxFreq = d3.max(d.value.map((d) => d.data.map((d) => d.freq))[0])
+  return d3.scaleDiverging((d) => d3.interpolateViridis(1 - d))
+    .domain([minFreq, medFreq, maxFreq])
+}
 
 /* fn: mouseover for tooltip */
 function mouseOver(event, d) {
@@ -93,6 +97,9 @@ function plotHsaGrps(projDat) {
     /* bins data for each hsagrp */
     let binDat = d.value.map((d) => d.data)[0]
 
+    /* custom color palette for bins */
+    let binsPal = colorPal(d)
+
     /* obtain coordinates for plotting circles */
     let cx = d.value.map((d) => Number(d.end_p_nohsa))[0]
     let cy = height / 1.66 / 2
@@ -131,7 +138,7 @@ function plotHsaGrps(projDat) {
       })
       .attr('height', height / 1.66)
       .style('fill', function (d) {
-        return colorPal(d.freq)
+        return binsPal(d.freq)
       })
 
     /* draw circles */
@@ -202,6 +209,9 @@ function updatePlots(data, selectedProjVar, selectedHorizon, selectedPod) {
 
     /* bins data for each hsagrp */
     let binDat = d.value.map((d) => d.data)[0]
+    
+    /* custom color palette for bins */
+    let binsPal = colorPal(d)
 
     /* select the correct svg for each hsagrp */
     let svg = d3.select('svg.' + d.value[0].hsagrp)
@@ -222,7 +232,7 @@ function updatePlots(data, selectedProjVar, selectedHorizon, selectedPod) {
       })
       .attr('height', height / 1.66)
       .style('fill', function (d) {
-        return colorPal(d.freq)
+        return binsPal(d.freq)
       })
 
     svg.selectAll('#end-p-bar').exit().remove()
@@ -306,8 +316,9 @@ export {
 }
 /* export d3 functions */
 export { d3 }
-export { xScale, colorPal, tooltip }
+export { xScale, tooltip }
 /* export udf functions */
+export { colorPal }
 export { mouseOver, mouseOut }
 export { plotHsaGrps }
 export { updatePlots }
